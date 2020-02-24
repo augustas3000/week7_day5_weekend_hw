@@ -1,15 +1,19 @@
 <template>
 
-  <div style="height: 80vh; width: 100%">
-    <div style="height: 300px overflow: auto;">
-      <p>First marker is placed at {{ withPopup.lat }}, {{ withPopup.lng }}</p>
+  <div class="map-box">
+
+    <div>
+      <h3>Summary:</h3>
+      <p>There are {{munros.length}} munros currently registered</p>
+      <p>The highest munro is: {{currentHighest()}}</p>
+      <!-- <p>There{{ withPopup.lat }}, {{ withPopup.lng }}</p>
       <p>Center is at {{ currentCenter }} and the zoom is: {{ currentZoom }}</p>
       <button @click="showLongText">
         Toggle long popup
       </button>
       <button @click="showMap = !showMap">
         Toggle map
-      </button>
+      </button> -->
     </div>
 
 
@@ -18,7 +22,7 @@
       :zoom="zoom"
       :center="center"
       :options="mapOptions"
-      style="height: 100%"
+      class="map"
       @update:center="centerUpdate"
       @update:zoom="zoomUpdate"
     >
@@ -29,13 +33,15 @@
 
       <l-marker v-for="(munro, index) in munros" :lat-lng="[munro.latlng_lat, munro.latlng_lng]" v-bind:key="index">
         <l-popup>
-          <div @click="innerClick">
-            I am a popup
-            <p v-show="showParagraph">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque
-              sed pretium nisl, ut sagittis sapien. Sed vel sollicitudin nisi.
-              Donec finibus semper metus id malesuada.
-            </p>
+          <div >
+            <p>Name: {{munro.name}}</p>
+            <hr>
+            <p>Height: {{munro.height}}m</p>
+            <p>Region: {{munro.region}}</p>
+            <p>Grid Ref: {{munro.gridref_letters}} {{munro.gridref_eastings}} {{munro.gridref_northings}}</p>
+            <hr>
+            <button v-on:click="handleClickAddFav(index)" type="button" name="button">Add to favorites</button>
+            <button v-on:click="showDetails(munro)" type="button" name="button">Show details</button>
           </div>
         </l-popup>
       </l-marker>
@@ -54,6 +60,8 @@ import L from 'leaflet';
 import { latLng } from "leaflet";
 import { LMap, LTileLayer, LMarker, LPopup, LTooltip } from "vue2-leaflet";
 import { Icon } from 'leaflet';
+import { eventBus } from "@/main.js";
+
 
 delete Icon.Default.prototype._getIconUrl;
 Icon.Default.mergeOptions({
@@ -92,6 +100,9 @@ export default {
       showMap: true
     };
   },
+  computed: {
+
+  },
   methods: {
     zoomUpdate(zoom) {
       this.currentZoom = zoom;
@@ -104,13 +115,49 @@ export default {
     },
     innerClick() {
       alert("Click!");
+    },
+    handleClickAddFav(index) {
+      eventBus.$emit('munro-added-to-fav', this.munros[index])
+    },
+    currentHighest() {
+      // let current_max = 0;
+      // let current_highest;
+      // return 'hello'
+      let current_highest = "";
+      let current_best_height = 0;
+
+      for (let munro of this.munros) {
+        if (munro.height > current_best_height) {
+          current_highest = munro.name
+          current_best_height = munro.height
+        }
+      }
+      return current_highest
+      // debugger;
+      // for (munro of this.munros) {
+      //   if (munro.height > current_max) {
+      //     current_max = munro.height
+      //     current_highest = munro
+      //   }
+      // }
+      // return current_highest
+    },
+
+    showDetails(munro) {
+      eventBus.$emit('show-details-selected-dd', munro)
     }
   }
 };
 </script>
 
 
+<style media="screen">
+  .map-box {
+    height: 500px;
+  }
 
+
+</style>
 
 
 
